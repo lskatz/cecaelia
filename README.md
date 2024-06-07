@@ -1,3 +1,7 @@
+Thinking about a project to detect chimera reads/contigs from kraken.
+Kraken has raw output showing kmer=>taxonomy along the length of a read/contig.
+Therefore, we might be able to run some kind of chi-squared test along the sequence to see if there is a chimera.
+
 # template-perl
 A simple template for perl projects
 
