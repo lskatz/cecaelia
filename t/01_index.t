@@ -2,9 +2,9 @@
 
 use strict;
 use warnings;
-use lib './lib';
 use File::Basename qw/dirname/;
 use FindBin qw/$RealBin/;
+use lib "$RealBin/../lib/perl5";
 use Data::Dumper;
 
 use Test::More tests => 2;
@@ -38,9 +38,5 @@ subtest 'kraken2' => sub {
     my $cmd = "kraken2 -db $RealBin/data/kraken_db $chimera > $out";
     is(system($cmd), 0, "kraken2");
 
-    # kraken.out now has a file with, e.g., 
-    #    C	chimera_of_K12_and_MN908947	562	4671555	562:14 0:35 562:121 0:63 562:34 0:40
-    # And now we need to translate all of that to the species or genus level,
-    # probably using taxonkit.
-    # Then find if it changes over to a totally different taxon at some point.
+    system("cecaelia.pl $out");
 }
