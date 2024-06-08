@@ -8,7 +8,7 @@ use File::Basename qw/basename/;
 use FindBin qw/$RealBin/;
 use lib "$RealBin/../lib/perl5";
 
-use Statistics::ChiSquare qw/chisquare/;
+use Statistics::ChisqIndep ();
 
 use version 0.77;
 our $VERSION = '0.1.1';
@@ -69,6 +69,9 @@ sub testForUnevenness{
             my @sciname = split(/;/, $scinames);
             my @rank = split(/;/, $ranks);
             my @taxid = split(/;/, $taxids);
+            #if($taxid == 2697049){
+            #  die Dumper [$count, \@sciname, \@rank, \@taxid];
+            #}
             for(my $i=0; $i<@rank; $i++){
                 $rank{$rank[$i]} = $taxid[$i];
                 $rank{$rank[$i]} //= 0; # set to 0 if not defined
@@ -77,11 +80,13 @@ sub testForUnevenness{
               push(@taxidsAlongSeq, $rank{$targetRank});
             }
         }
+
+        logmsg "We have ".scalar(@taxidsAlongSeq)." positions from kraken for seqname '$seqname'";
         
         # make the chi square table.
         # Pick a position and then how many flanking positions to look at
-        my $position = 10;
-        my $flank = 5;
+        my $position = 4550000;
+        my $flank = 14000;
         my $start = $position - $flank;
         my $stop  = $position + $flank;
 
@@ -90,16 +95,37 @@ sub testForUnevenness{
         my %countsAfter;
         for my $i($start..$position-1){
             my $taxid = $taxidsAlongSeq[$i];
+            die "ERROR: taxid is not defined for position $i" if(!defined($taxid));
             $countsBefore{$taxid}++;
         }
         for my $i($position+1..$stop){
             my $taxid = $taxidsAlongSeq[$i];
+            die "ERROR: taxid is not defined for position $i" if(!defined($taxid));
             $countsAfter{$taxid}++;
         }
 
-        my @chiTable;
-        push(@chiTable, keys(%countsBefore));
-        push(@chiTable, keys(%countsAfter));
+        # how many are "before" in the major category?
+        my $majorCategory1 = 562;    # E. coli
+        my $majorCategory2 = 694009; # Severe acute respiratory syndrome-related coronavirus
+        my $missingCategory= 1;
+
+        # chi square table with pseudocounts
+        my @chiTable = (
+          [
+            $countsBefore{$majorCategory1} //  1,
+            $countsBefore{$majorCategory2} //  1,
+            $countsBefore{$missingCategory} // 1,
+          ],
+          [
+            $countsAfter{$majorCategory1} //   1,
+            $countsAfter{$majorCategory2} //   1,
+            $countsAfter{$missingCategory} //  1,
+          ]
+        );
+        my $chi = new Statistics::ChisqIndep;
+        $chi->load_data(\@chiTable);
+        $chi->print_summary();die;
+
         print Dumper [$position,$flank, \%countsBefore, \%countsAfter, \@chiTable, [chisquare(@chiTable)]];
     }
 }
