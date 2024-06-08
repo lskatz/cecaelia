@@ -63,6 +63,8 @@ sub testForUnevenness{
                 chomp($lineage);
                 $taxonkitLineageCache{$taxid} = $lineage;
             } 
+
+            # Parse the lineage. Might want to cache this part later if I want to eek out a little more speed.
             my(undef, $scinames, $taxids, $ranks) = split(/\t/, $lineage);
             my @sciname = split(/;/, $scinames);
             my @rank = split(/;/, $ranks);
@@ -71,9 +73,34 @@ sub testForUnevenness{
                 $rank{$rank[$i]} = $taxid[$i];
                 $rank{$rank[$i]} //= 0; # set to 0 if not defined
             }
-            push(@taxidsAlongSeq, $rank{$targetRank});
+            for(1..$count){
+              push(@taxidsAlongSeq, $rank{$targetRank});
+            }
         }
-        die Dumper \@taxidsAlongSeq;
+        
+        # make the chi square table.
+        # Pick a position and then how many flanking positions to look at
+        my $position = 10;
+        my $flank = 5;
+        my $start = $position - $flank;
+        my $stop  = $position + $flank;
+
+        # Get the "before" and "after"
+        my %countsBefore;
+        my %countsAfter;
+        for my $i($start..$position-1){
+            my $taxid = $taxidsAlongSeq[$i];
+            $countsBefore{$taxid}++;
+        }
+        for my $i($position+1..$stop){
+            my $taxid = $taxidsAlongSeq[$i];
+            $countsAfter{$taxid}++;
+        }
+
+        my @chiTable;
+        push(@chiTable, keys(%countsBefore));
+        push(@chiTable, keys(%countsAfter));
+        print Dumper [$position,$flank, \%countsBefore, \%countsAfter, \@chiTable, [chisquare(@chiTable)]];
     }
 }
 
