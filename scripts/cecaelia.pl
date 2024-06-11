@@ -42,6 +42,8 @@ sub testForUnevenness{
   while(my $line = <$krakenFh>){
     chomp $line;
     my $taxidsAlongSeq = findTaxIds($line, $targetRank, \%taxonkitLineageCache, $settings);
+    logmsg "We have ".scalar(@$taxidsAlongSeq)." positions from kraken";
+
     # Find the majority taxid and then see if anything disagrees with it
     my %taxidCount;
     for(@$taxidsAlongSeq){
@@ -52,10 +54,6 @@ sub testForUnevenness{
     if($majorityTaxid == 0){
       $majorityTaxid = $sortedTaxids[1];
     }
-    print Dumper \%taxidCount, $majorityTaxid;
-    ...;
-
-    logmsg "We have ".scalar(@$taxidsAlongSeq)." positions from kraken";
     
     # make the chi square table.
     # Pick a position and then how many flanking positions to look at

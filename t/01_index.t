@@ -43,7 +43,7 @@ subtest 'kraken2' => sub {
 
     # Run kraken
     my $out = "$RealBin/data/workdir/kraken.out";
-    my $cmd = "kraken2 -db $RealBin/data/kraken_db $chimera > $out";
+    my $cmd = "kraken2 --db $RealBin/data/kraken_db $chimera > $out";
     is(system($cmd), 0, "kraken2");
 
     system("cecaelia.pl $out");
